@@ -1,0 +1,138 @@
+require 'pp'
+require 'oauth2'
+require 'webrick'
+require 'optparse'
+
+options = {}
+required = []
+
+optp = OptionParser.new do |opts|
+  src = File.basename($0)
+  opts.banner = "Usage: #{src} --auth AUTHORISATION_URL --token TOKEN_URL "\
+    "--id CLIENT_ID --secret CLIENT_SECRET\n\n"
+
+  required << :auth
+  desc_auth = 'Authorisation URL (required)'
+  opts.on('-a', '--auth AUTHORISATION_URL', desc_auth) do |opt|
+    options[:auth] = opt
+  end
+
+  required << :token
+  opts.on('-t', '--token TOKEN_URL', 'Token URL (required)') do |opt|
+    options[:token] = opt
+  end
+
+  required << :id
+  opts.on('-i', '--id CLIENT_ID', 'Client ID (required)') do |opt|
+    options[:id] = opt
+  end
+
+  required << :secret
+  opts.on('-s', '--secret CLIENT_SECRET', 'Client secret (required)') do |opt|
+    options[:secret] = opt
+  end
+
+  options[:scope] = []
+  desc_scope = 'OAuth2 scope to authorise (not used if not specified)'
+  opts.on('-o', '--scope SCOPE1,SCOPE2,etc', Array, desc_scope) do |opt|
+    options[:scope] = opt
+  end
+
+  options[:separator] = ' '
+  desc_separator = 'OAuth2 scope separator character (defaults to space) n.b '\
+    'the scope arg is always passed as array and joined with the separator '\
+    'char for the request'
+  opts.on('-e', '--separator', desc_separator) do |opt|
+    options[:separator] = opt
+  end
+
+  options[:port] = 8000
+  desc_port = 'Callback port (defaults to 8000)'
+  opts.on('-p', '--port 8000', Integer, desc_port) do |opt|
+    options[:port] = opt
+  end
+
+  options[:debug] = false
+  opts.on('-d', '--debug', 'Turn on OAuth2 library debug and WEBrick log') do
+    ENV['OAUTH_DEBUG'] = 'true'
+    options[:debug] = true
+  end
+end
+
+optp.parse!
+
+required.each do |arg|
+  if options[arg].nil?
+    raise OptionParser::MissingArgument.new(arg)
+  end
+end
+
+state = ('a'..'z').to_a.shuffle[0,32].join
+redirect_uri = "http://127.0.0.1:#{options[:port]}/oauth/callback"
+client = OAuth2::Client.new(
+  options[:id],
+  options[:secret],
+  authorize_url: options[:auth],
+  token_url: options[:token]
+)
+
+code_args = {
+  access_type: 'offline',
+  redirect_uri: redirect_uri,
+  state: state
+}
+
+unless options[:scope].empty?
+  code_args[:scope] = options[:scope].join(options[:separator])
+end
+
+url = client.auth_code.authorize_url(code_args)
+
+puts ''
+puts "Go to URL: #{url}"
+puts ''
+
+puts 'Starting server - use Ctrl+C to stop'
+puts ''
+
+server_options = {
+  Port: options[:port]
+}
+
+unless options[:debug]
+  server_options[:Logger] = WEBrick::Log.new(File.open(File::NULL, 'w'))
+  server_options[:AccessLog] = []
+end
+
+server = WEBrick::HTTPServer.new(server_options)
+
+server.mount_proc('/') do |req, res|
+  unless req.path == '/oauth/callback'
+    res.status = 403
+    res.body = 'Invalid callback path - expecting /oauth/callback'
+    next
+  end
+
+  unless req.query['state'] == state
+    res.status = 400
+    res.body = 'Invalid state in callback'
+    next
+  end
+
+  res.status = 200
+  res.body = 'You may now close this tab'
+
+  token = client.auth_code.get_token(
+    req.query['code'],
+    redirect_uri: redirect_uri
+  )
+
+  pp token.to_hash
+  puts ''
+end
+
+trap('INT') do
+  server.shutdown
+end
+
+server.start
