@@ -1,0 +1,6 @@
+AllCops:
+  Exclude:
+    - 'oauth2-cli.gemspec'
+
+Metrics/BlockLength:
+  Max: 50

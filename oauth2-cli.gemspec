@@ -15,6 +15,9 @@ Gem::Specification.new do |s|
   s.description = "CLI utility to get OAuth token for three-leggged flows".freeze
   s.email = "saltwaterc@gmail.com".freeze
   s.executables = ["oauth2-cli".freeze]
+  s.extra_rdoc_files = [
+    "README.md"
+  ]
   s.files = [
     "bin/oauth2-cli"
   ]
@@ -29,13 +32,16 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<oauth2>.freeze, ["~> 1.4"])
       s.add_development_dependency(%q<jeweler>.freeze, ["~> 2.3"])
+      s.add_development_dependency(%q<rubocop>.freeze, ["~> 0.62"])
     else
       s.add_dependency(%q<oauth2>.freeze, ["~> 1.4"])
       s.add_dependency(%q<jeweler>.freeze, ["~> 2.3"])
+      s.add_dependency(%q<rubocop>.freeze, ["~> 0.62"])
     end
   else
     s.add_dependency(%q<oauth2>.freeze, ["~> 1.4"])
     s.add_dependency(%q<jeweler>.freeze, ["~> 2.3"])
+    s.add_dependency(%q<rubocop>.freeze, ["~> 0.62"])
   end
 end
 

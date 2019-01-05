@@ -8,8 +8,11 @@ require 'optparse'
 options = {}
 required = []
 
+src = File.basename($PROGRAM_NAME)
+state = ('a'..'z').to_a.sample(32).join
+path = '/oauth/callback'
+
 optp = OptionParser.new do |opts|
-  src = File.basename($0)
   opts.banner = "Usage: #{src} --auth AUTHORISATION_URL --token TOKEN_URL "\
     "--id CLIENT_ID --secret CLIENT_SECRET\n\n"
 
@@ -64,13 +67,13 @@ end
 optp.parse!
 
 required.each do |arg|
-  if options[arg].nil?
-    raise OptionParser::MissingArgument.new(arg)
-  end
+  next unless options[arg].nil?
+
+  STDERR.puts "Error: missing required argument #{arg}. "\
+    "See #{src} -h for help."
+  exit 1
 end
 
-state = ('a'..'z').to_a.shuffle[0,32].join
-path = '/oauth/callback'
 redirect_uri = "http://127.0.0.1:#{options[:port]}#{path}"
 client = OAuth2::Client.new(
   options[:id],
