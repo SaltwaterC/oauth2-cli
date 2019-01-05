@@ -120,9 +120,6 @@ server.mount_proc('/') do |req, res|
     next
   end
 
-  res.status = 200
-  res.body = 'You may now close this tab'
-
   token = client.auth_code.get_token(
     req.query['code'],
     redirect_uri: redirect_uri
@@ -130,6 +127,9 @@ server.mount_proc('/') do |req, res|
 
   pp token.to_hash
   puts ''
+
+  res.status = 200
+  res.body = 'You may now close this tab'
 end
 
 trap('INT') do
