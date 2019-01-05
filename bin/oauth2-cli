@@ -68,7 +68,8 @@ required.each do |arg|
 end
 
 state = ('a'..'z').to_a.shuffle[0,32].join
-redirect_uri = "http://127.0.0.1:#{options[:port]}/oauth/callback"
+path = '/oauth/callback'
+redirect_uri = "http://127.0.0.1:#{options[:port]}#{path}"
 client = OAuth2::Client.new(
   options[:id],
   options[:secret],
@@ -107,9 +108,9 @@ end
 server = WEBrick::HTTPServer.new(server_options)
 
 server.mount_proc('/') do |req, res|
-  unless req.path == '/oauth/callback'
+  unless req.path == path
     res.status = 403
-    res.body = 'Invalid callback path - expecting /oauth/callback'
+    res.body = "Invalid callback path - expecting #{path}"
     next
   end
 
