@@ -3,7 +3,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name        = 'oauth2-cli'
-    gem.version     = '0.1.0'
+    gem.version     = '0.2.0'
     gem.summary     = %(CLI utility to get OAuth token)
     gem.description = %(CLI utility to get OAuth token for three-leggged flows)
     gem.author      = 'Ștefan Rusu'

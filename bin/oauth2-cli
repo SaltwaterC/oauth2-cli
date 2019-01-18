@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'pp'
+require 'uri'
+require 'json'
 require 'oauth2'
 require 'webrick'
 require 'optparse'
@@ -51,10 +53,26 @@ optp = OptionParser.new do |opts|
     options[:separator] = opt
   end
 
+  options[:host] = '127.0.0.1'
+  desc_host = 'Callback host (defaults to 127.0.0.1) n.b this allows you to '\
+    'run this tool on a remote machine and have the authorisation code go '\
+    'there; the callback HTTP server always binds to all available network '\
+    'interfaces irrespective of this value'
+  opts.on('-h', '--host 127.0.0.1', String, desc_host) do |opt|
+    options[:host] = opt
+  end
+
   options[:port] = 8000
   desc_port = 'Callback port (defaults to 8000)'
   opts.on('-p', '--port 8000', Integer, desc_port) do |opt|
     options[:port] = opt
+  end
+
+  options[:write] = false
+  desc_write = 'Write the returned token as JSON using TOKEN_URL as filename '\
+    'with the current working directory being the destination'
+  opts.on('-w', '--write', desc_write) do
+    options[:write] = true
   end
 
   options[:debug] = false
@@ -70,11 +88,12 @@ required.each do |arg|
   next unless options[arg].nil?
 
   STDERR.puts "Error: missing required argument #{arg}. "\
-    "See #{src} -h for help."
+    "See #{src} --help for help."
   exit 1
 end
 
-redirect_uri = "http://127.0.0.1:#{options[:port]}#{path}"
+token_uri = URI(options[:token])
+redirect_uri = "http://#{options[:host]}:#{options[:port]}#{path}"
 client = OAuth2::Client.new(
   options[:id],
   options[:secret],
@@ -132,6 +151,8 @@ server.mount_proc('/') do |req, res|
 
   pp token.to_hash
   puts ''
+
+  File.write("#{token_uri.host}.json", token.to_hash.to_json) if options[:write]
 
   res.status = 200
   res.body = 'You may now close this tab'

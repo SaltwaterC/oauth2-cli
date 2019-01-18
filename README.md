@@ -4,7 +4,7 @@ Command line utility to get an OAuth access token for three-legged flows where y
 
 The reason for rewriting this in Ruby was the difficulty to debug the OAuth2 flow when things don't go as expected. Go's OAuth2 library is pretty opaque and trying to figure out why for some services the client_id is not passed when sending the the token request after obtaining the authorisation code has been fruitless - even though sending the request via curl using the produced authorisation code proved successful.
 
-The purpose for this tool is to obtain access and refresh tokens for applications which run as services (i.e daemons) where doing the OAuth2 flow is a bit difficult.
+The purpose for this tool is to obtain access and refresh tokens for applications which run as services (e.g daemons) where doing the OAuth2 flow is a bit difficult. However, the scope is not limited to just this. For this use case, the `client_credentials` grant type would be more appropriate, but unfortunately not all API providers support this because they make the rather wrong assumption that all apps are used interactively. They only support `authorization_code` grant type or worse, `password` grant type.
 
 ## Install
 
@@ -14,12 +14,12 @@ gem install oauth2-cli
 
 ## Usage
 
-For services which validate the callback URL, you must use `http://127.0.0.1:8000/oauth/callback` in your OAuth2 application. Bear in mind that `8000` is the default port which may be changed via CLI argument. Adapt as necessary.
+For services which validate the callback URL, you must use `http://127.0.0.1:8000/oauth/callback` in your OAuth2 application. Bear in mind that `8000` is the default port which may be changed via CLI argument. `127.0.0.1` is the default host which may be changed via CLI argument. Adapt as necessary.
 
 The `oauth2-cli` script has a built in help:
 
 ```bash
-oauth2-cli -h
+oauth2-cli --help
 Usage: oauth2-cli --auth AUTHORISATION_URL --token TOKEN_URL --id CLIENT_ID --secret CLIENT_SECRET
 
     -a, --auth AUTHORISATION_URL     Authorisation URL (required)
@@ -28,7 +28,9 @@ Usage: oauth2-cli --auth AUTHORISATION_URL --token TOKEN_URL --id CLIENT_ID --se
     -s, --secret CLIENT_SECRET       Client secret (required)
     -o, --scope SCOPE1,SCOPE2,etc    OAuth2 scope to authorise (not used if not specified)
     -e, --separator                  OAuth2 scope separator character (defaults to space) n.b the scope arg is always passed as array and joined with the separator char for the request
+    -h, --host 127.0.0.1             Callback host (defaults to 127.0.0.1) n.b this allows you to run this tool on a remote machine and have the authorisation code go there; the callback HTTP server always binds to all available network interfaces irrespective of this value
     -p, --port 8000                  Callback port (defaults to 8000)
+    -w, --write                      Write the returned token as JSON using TOKEN_URL as filename with the current working directory being the destination
     -d, --debug                      Turn on OAuth2 library debug and WEBrick log
 ```
 
