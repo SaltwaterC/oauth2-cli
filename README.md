@@ -27,10 +27,11 @@ Usage: oauth2-cli --auth AUTHORISATION_URL --token TOKEN_URL --id CLIENT_ID --se
     -i, --id CLIENT_ID               Client ID (required)
     -s, --secret CLIENT_SECRET       Client secret (required)
     -o, --scope SCOPE1,SCOPE2,etc    OAuth2 scope to authorise (not used if not specified)
-    -e, --separator                  OAuth2 scope separator character (defaults to space) n.b the scope arg is always passed as array and joined with the separator char for the request
+    -e, --separator SEPARATOR        OAuth2 scope separator character (defaults to space) n.b the scope arg is always passed as array and joined with the separator char for the request
     -h, --host 127.0.0.1             Callback host (defaults to 127.0.0.1) n.b this allows you to run this tool on a remote machine and have the authorisation code go there; the callback HTTP server always binds to all available network interfaces irrespective of this value
     -p, --port 8000                  Callback port (defaults to 8000)
-    -w, --write                      Write the returned token as JSON using TOKEN_URL as filename with the current working directory being the destination
+    -w, --write                      Write the returned token as JSON using TOKEN_URL host as filename with the current working directory being the destination
+    -u, --audience AUDIENCE          The token audience, not used if unspecified (optional)
     -d, --debug                      Turn on OAuth2 library debug and WEBrick log
 ```
 
