@@ -49,7 +49,7 @@ optp = OptionParser.new do |opts|
   desc_separator = 'OAuth2 scope separator character (defaults to space) n.b '\
     'the scope arg is always passed as array and joined with the separator '\
     'char for the request'
-  opts.on('-e', '--separator', desc_separator) do |opt|
+  opts.on('-e', '--separator SEPARATOR', desc_separator) do |opt|
     options[:separator] = opt
   end
 
@@ -69,10 +69,16 @@ optp = OptionParser.new do |opts|
   end
 
   options[:write] = false
-  desc_write = 'Write the returned token as JSON using TOKEN_URL as filename '\
-    'with the current working directory being the destination'
+  desc_write = 'Write the returned token as JSON using TOKEN_URL host as '\
+  'filename with the current working directory being the destination'
   opts.on('-w', '--write', desc_write) do
     options[:write] = true
+  end
+
+  options[:audience] = nil
+  desc_audience = 'The token audience, not used if unspecified (optional)'
+  opts.on('-u', '--audience AUDIENCE', desc_audience) do |opt|
+    options[:audience] = opt
   end
 
   options[:debug] = false
@@ -82,7 +88,12 @@ optp = OptionParser.new do |opts|
   end
 end
 
-optp.parse!
+begin
+  optp.parse!
+rescue OptionParser::MissingArgument => err
+  STDERR.puts err
+  exit 1
+end
 
 required.each do |arg|
   next unless options[arg].nil?
@@ -110,6 +121,8 @@ code_args = {
 unless options[:scope].empty?
   code_args[:scope] = options[:scope].join(options[:separator])
 end
+
+code_args[:audience] = options[:audience] unless options[:audience].nil?
 
 url = client.auth_code.authorize_url(code_args)
 
